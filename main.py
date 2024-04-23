@@ -32,3 +32,26 @@ button_handler = True
 
 # Глобальную is_folder_delete- для настройки кнопки на разные функции;
 is_folder_delete = False
+
+# Создаем basic_keyboard для хранения id пользователя, и названия текущей папки.
+def create_basic_keyboard(UserID: int):
+    # Создание InlineKeyboard.
+    basic_keyboard = types.InlineKeyboardMarkup()
+
+    # Итерация всех названий папок.
+    for name_folder in UserDict[UserID].keys():
+        # Создание на каждую папку из списка кнопки.
+        name_folder = types.InlineKeyboardButton(text=f"📁{name_folder}", callback_data=f'{name_folder}')
+
+        basic_keyboard.add(name_folder)
+
+    # Создание и добавление кнопок 'создать папку', 'переместить заметку' на клавиатуру.
+    basic_keyboard.add(types.InlineKeyboardButton(text='➕Cоздать папку', callback_data='Cоздать папку'),
+                       types.InlineKeyboardButton(text='➡️Переместить заметку', callback_data='Переместить заметку'))
+
+    # Создание и добавление кнопок 'удалить папку', 'удалить заметку' на клавиатуру.
+    basic_keyboard.add(types.InlineKeyboardButton(text='❌Удалить папку', callback_data='Удалить папку'),
+                       types.InlineKeyboardButton(text='🗑Удалить заметку', callback_data='Удалить заметку'))
+
+    # Вывод клавиатуры.
+    return basic_keyboard
