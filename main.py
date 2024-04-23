@@ -55,3 +55,38 @@ def create_basic_keyboard(UserID: int):
 
     # Вывод клавиатуры.
     return basic_keyboard
+
+# Создаем additional_keyboard, в отличие от основной показывает не только названия папок, но и их содержимое.
+def create_additional_keyboard(UserID: int):
+    additional_keyboard = types.InlineKeyboardMarkup()
+    for name_folder in UserDict[UserID].keys():
+        name_folder = types.InlineKeyboardButton(text=f"📁{name_folder}: {' '.join(UserDict[UserID][name_folder])}",
+                                                 callback_data=f'{name_folder}')
+
+        additional_keyboard.add(name_folder)
+
+    # Создание и добавление кнопок 'создать папку', 'переместить заметку' на клавиатуру.
+    additional_keyboard.add(types.InlineKeyboardButton(text='➕Cоздать папку', callback_data='Cоздать папку'),
+                            types.InlineKeyboardButton(text='➡️Переместить заметку',
+                                                       callback_data='Переместить заметку'))
+
+    # Создание и добавление кнопок 'удалить папку', 'удалить заметку' на клавиатуру.
+    additional_keyboard.add(types.InlineKeyboardButton(text='❌Удалить папку', callback_data='Удалить папку'),
+                            types.InlineKeyboardButton(text='🗑Удалить заметку', callback_data='Удалить заметку'))
+
+    return additional_keyboard
+
+
+
+# Создаем optional_keyboard, которая показывает только названия папок.
+def create_optional_keyboard(UserID: int):
+    optional_keyboard = types.InlineKeyboardMarkup()
+
+    for name_folder in UserDict[UserID].keys():
+        name_folder = types.InlineKeyboardButton(text=f"📁{name_folder}", callback_data=f'{name_folder}')
+
+        optional_keyboard.add(name_folder)
+
+    return optional_keyboard
+
+
