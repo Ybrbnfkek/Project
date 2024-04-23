@@ -131,3 +131,160 @@ def help_bot(message):
                             reply_markup=basic_keyboard)
 
 
+# Обработка call - запросы, при нажатии кнопки пользователем.
+@bot.callback_query_handler(func=lambda call: button_handler)
+def call_back(call):
+    # Если получен отклик от кнопки.
+    if call.message:
+        # Глобальная is_folder_delete- для настройки кнопки на разные функции;
+        global is_folder_delete
+
+        # Если получен отклик от кнопки "создать папку".
+        if call.data == "Cоздать папку":
+            # Глобальная msg, в которой находится стартовое или последнее сообщение бота об итогах действия.
+            global msg
+
+            # Глобальная mssg, в которой находится cообщения, которые необходимо удалить при ошибке написания текста.
+            global mssg
+
+            # Глобальная choice_handler- для разграничения выбора функции при набирании текста пользователем.
+            global choice_handler
+
+            # Глобальная UserDict - для сохранения id пользователя в качестве ключа и название папки и ее содержимого в качестве значения.
+            global UserDict
+
+            # Редактированный текст сменяется на сообщение о необходимости ввода данных.
+            msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                        text=f"Введите название папки:  ")
+
+            # Меняем значение choice_handler на 2, для правильной обработки текста.
+            choice_handler = 2
+
+        # Если получен отклик от кнопки "переместить заметку".
+        elif call.data == f"Переместить заметку":
+            # Глобальная button_handler - для включения / выключения декоратора, отвечающего на call - запросы.
+            global button_handler
+
+            # Меняем button_handler на False, для блокирования нажатия кнопок.
+            button_handler = False
+
+            # Глобальная CurrentFolder- для сохранения названия текущей папки в виде строки.
+            global CurrentFolder
+
+            # Если в списке папок, 2 или более папки.
+            if len(UserDict[user_id].values()) >= 2:
+                # Создание additional_keyboard.
+                additional_keyboard = create_additional_keyboard(call.from_user.id)
+
+                # Редактированный текст сменяется на сообщение о необходимости ввода данных.
+                msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                            reply_markup=additional_keyboard,
+                                            text="Введите название заметки, которую хотите переместить и через & папку,откуда переместить и через & папку"
+                                                 " куда хотите переметить (пример: хлеб&фильмы&покупки): ")
+
+                # Меняем значение choice_handler на 3, для правильной обработки текста.
+                choice_handler = 3
+
+            # Если в списке папок, папок меньше 2.
+            else:
+                basic_keyboard = create_basic_keyboard(call.from_user.id)
+
+                msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                            reply_markup=basic_keyboard,
+                                            text="Перемещение невозможно/неправильно введенные данные: ")
+
+                # Меняем button_handler на True, для активации нажатия кнопок.
+                button_handler = True
+
+        # Если получен отклик от кнопки "удалить папку".
+        elif call.data == "Удалить папку":
+            # Проверка: не пуст ли список с названиями папок.
+            if len(UserDict[user_id]) >= 1:
+                # Меняем is_folder_delete на True,  для настройки кнопки навзвания папки на удаление этой папки.
+                is_folder_delete = True
+
+                # Создание optional_keyboard.
+                optional_keyboard = create_optional_keyboard(call.from_user.id)
+
+                # Редактированный текст сменяется на сообщение о необходимости ввода данных.
+                msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                            reply_markup=optional_keyboard,
+                                            text="Нажмите на папку, которую хотите удалить:")
+
+            else:
+                # Создание additional_keyboard.
+                basic_keyboard = create_basic_keyboard(call.from_user.id)
+
+                # Редактированный текст сменяется на сообщение указывающее на ошибку.
+                msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                            text="Невозможно удалить несуществующие папки",
+                                            reply_markup=basic_keyboard)
+                # Меняем button_handler на True, для активации нажатия кнопок.
+                button_handler = True
+
+        # Если получен отклик от кнопки "удалить заметку".
+        elif call.data == "Удалить заметку":
+            # Если количество заметок 1 и более.
+            if count_notes >= 1:
+                # Создание additional_keyboard.
+                additional_keyboard = create_additional_keyboard(call.from_user.id)
+
+                # Редактированный текст сменяется на сообщение о необходимости ввода данных.
+                msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                            text=f"Введите название заметки, которую хотите удалить:",
+                                            reply_markup=additional_keyboard)
+
+                # Меняем значение choice_handler на 5, для правильной обработки текста.
+                choice_handler = 5
+
+            # Если количество заметок меньше 1.
+            else:
+                # Создание basic_keyboard.
+                basic_keyboard = create_basic_keyboard(call.from_user.id)
+
+                # Редактированный текст сменяется на сообщение указывающее на ошибку.
+                msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                            text="Невозможно удалить несуществующие заметки",
+                                            reply_markup=basic_keyboard)
+
+        # Если получен отклик названия папки.
+        else:
+            # Запоминание нажатия текущей папки.
+            CurrentFolder = call.data
+
+            # Если нужно удалить папку.
+            if is_folder_delete == True:
+                # Удаление папки, выбранной пользователем из словаря.
+                del UserDict[user_id][CurrentFolder]
+
+                # Создание basic_keyboard.
+                basic_keyboard = create_basic_keyboard(call.from_user.id)
+
+                # Вывод текста, отражающего успех (удаление папки) и basic_keyboard.
+                mssg = bot.send_message(call.message.chat.id, "Ваши папки, после удаления:",
+                                        reply_markup=basic_keyboard)
+
+                # Удаляем  последнее сообщение, после нажатия кнопки.
+                bot.delete_message(chat_id=call.message.chat.id, message_id=msg.message_id)
+
+                # Меняем is_folder_delete на False, для создания новых заметок.
+                is_folder_delete = False
+
+            # Если нужно создать заметку.
+            else:
+                # Меняем значение choice_handler на 6.
+                choice_handler = 6
+
+                # Проверка: количество заметок меньше 1.
+                if len(UserDict[user_id][CurrentFolder]) < 1:
+                    # Редактированный текст сменяется на сообщение о необходимости ввода данных.
+                    msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                                text=f"Выбранная папка {CurrentFolder}" + '\n' "Введите название заметки: ")
+
+                else:
+                    msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                                text=f"Выбранная папка {CurrentFolder}, в ней находится:"
+                                                     f" {' '.join(UserDict[user_id][CurrentFolder])}"
+                                                     + '\n'"Введите название заметки: ")
+
+
