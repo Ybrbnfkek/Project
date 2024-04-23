@@ -288,3 +288,183 @@ def call_back(call):
                                                      + '\n'"Введите название заметки: ")
 
 
+# Обработка текстовых сообщений от пользователя.
+@bot.message_handler(content_types=["text"])
+def add_note(message):
+    # Сохранение текущего id пользователя.
+    user_id = message.from_user.id
+
+    # Глобальная choice_handler- для разграничения выбора функции при набирании текста пользователем.
+    global choice_handler
+
+    # Глобальная msg, в которой находится стартовое или последнее сообщение бота об итогах произведенного действия.
+    global msg
+
+    # Глобальная mssg, в которой находится cообщения, которые необходимо удалить при ошибке написания текста.
+    global mssg
+
+    # Глобальная button_handler - для включения / выключения декоратора, отвечающего на call - запросы.
+    global button_handler
+
+    # Глобальная count_notes- для вычисления количества заметок.
+    global count_notes
+
+    # Глобальная is_folder_delete- для настройки кнопки на разные функции;
+    global is_folder_delete
+
+    # Глобальная UserDict - для сохранения id пользователя в качестве ключа и название папки и ее содержимого в качестве значения.
+    global UserDict
+
+    if choice_handler == 1:
+        bot.delete_message(chat_id=message.chat.id, message_id=mssg.message_id)
+
+        basic_keyboard = create_basic_keyboard(message.from_user.id)
+
+        mssg = bot.send_message(message.chat.id,
+                                f'{message.from_user.username}, повторите попытку (нажмите кнопку папки для создания заметки,'
+                                f' или кнопку с действием которое выхотите совершить).',
+                                reply_markup=basic_keyboard)
+
+        bot.delete_message(message.chat.id, message.message_id)
+
+    # Если пользователь нажал кнопку "создать папку" и произошла сменa choice_handler на 2.
+    elif choice_handler == 2:
+        # Локальная переменная - есть ли идентичные папки(1 - есть, 0 - нет).
+        identical_folders = 0
+
+        for name_folder in UserDict[message.from_user.id].keys():
+            # Проверка: не пытается ли пользователь создать идентичные папки.
+            if name_folder == message.text:
+                identical_folders = 1
+
+        if identical_folders > 1:
+            # Создание basic_keyboard.
+            basic_keyboard = create_basic_keyboard(message.from_user.id)
+
+            mssg = bot.send_message(message.chat.id, "Такая папка уже есть: ", reply_markup=basic_keyboard)
+
+        # Если идентичных папок нет, и список не пуст.
+        else:
+            UserDict[message.from_user.id][message.text] = list()
+
+            # Открытие JSON-файла, для каждого пользователя отдельного, для хранения базы данных.
+            with open(f"UserData/{message.from_user.id}.json", "w", encoding="utf-8") as write_file:
+                json.dump(UserDict[user_id], write_file, ensure_ascii=False, indent=2, separators=(',', ': '))
+
+            basic_keyboard = create_basic_keyboard(message.from_user.id)
+
+            mssg = bot.send_message(message.chat.id, "Ваши папки:", reply_markup=basic_keyboard)
+
+        bot.delete_message(chat_id=message.chat.id, message_id=msg.message_id)
+
+        bot.delete_message(message.chat.id, message.message_id)
+
+        choice_handler = 1
+
+        identical_folders = 0
+
+    elif choice_handler == 3:
+        # Локальная переменная для обработки количества перемещенных папок.
+        moved_folders = 0
+
+        if message.text.count('&') == 2:
+            for value in UserDict[user_id].values():
+                message.text1, message.text2, message.text3 = message.text.split('&')
+
+                if message.text1 in value and message.text1 not in UserDict[user_id][message.text3]:
+                    # Удаление заметки из папки, где она находится.
+                    UserDict[user_id][message.text2].remove(message.text1)
+
+                    # Добавление заметки в словарь в новую папку.
+                    UserDict[user_id][message.text3].append(message.text1)
+
+                    moved_folders = +1
+
+                    if moved_folders >= 1:
+                        additional_keyboard = create_additional_keyboard(message.from_user.id)
+
+                        mssg = bot.send_message(message.chat.id, "Ваши заметки, после перемещения:",
+                                                reply_markup=additional_keyboard)
+
+                        break
+
+                else:
+                    additional_keyboard = create_additional_keyboard(message.from_user.id)
+
+                    mssg = bot.send_message(message.chat.id,
+                                            "Перемещения не произошло, попробуйте заново"
+                                            " (проверьте правильность написания/присутствие заметок):",
+                                            reply_markup=additional_keyboard)
+
+                    break
+
+        else:
+            additional_keyboard = create_additional_keyboard(message.from_user.id)
+
+            mssg = bot.send_message(message.chat.id,
+                                    "Перемещения не произошло, попробуйте заново"
+                                    " (проверьте правильность написания/присутствие заметок):",
+                                    reply_markup=additional_keyboard)
+
+        bot.delete_message(chat_id=message.chat.id, message_id=msg.message_id)
+
+        bot.delete_message(message.chat.id, message.message_id)
+
+        choice_handler = 1
+
+        button_handler = True
+
+        moved_folders = 0
+
+    elif choice_handler == 5:
+        deleted_notes = 0
+
+        for value in UserDict[user_id].values():
+            while message.text in value:
+                value.remove(message.text)
+
+                count_notes -= 1
+
+                deleted_notes += 1
+
+        if deleted_notes > 0:
+            additional_keyboard = create_additional_keyboard(message.from_user.id)
+            mssg = bot.send_message(message.chat.id, "Ваши заметки, после удаления:",
+                                    reply_markup=additional_keyboard)
+
+        else:
+            additional_keyboard = create_additional_keyboard(message.from_user.id)
+
+            mssg = bot.send_message(message.chat.id,
+                                    "Заметки с таким именем не существует: проверьте написание):",
+                                    reply_markup=additional_keyboard)
+
+        bot.delete_message(chat_id=message.chat.id, message_id=msg.message_id)
+
+        bot.delete_message(message.chat.id, message.message_id)
+
+        choice_handler = 1
+
+    else:
+        UserDict[user_id][CurrentFolder].append(message.text)
+
+        with open(f"UserData/{message.from_user.id}.json", "w", encoding="utf-8") as write_file:
+            json.dump(UserDict[user_id], write_file, ensure_ascii=False, indent=2, separators=(',', ': '))
+
+        basic_keyboard = create_basic_keyboard(message.from_user.id)
+
+        mssg = bot.send_message(message.chat.id,
+                                text=f"Заметки из папки {CurrentFolder}: {' '.join(UserDict[user_id][CurrentFolder])}",
+                                reply_markup=basic_keyboard)
+
+        count_notes += 1
+
+        bot.delete_message(chat_id=message.chat.id, message_id=msg.message_id)
+
+        bot.delete_message(message.chat.id, message.message_id)
+
+        choice_handler = 1
+
+
+if __name__ == "__main__":
+    bot.polling(none_stop=True)
