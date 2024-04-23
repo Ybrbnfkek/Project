@@ -89,4 +89,45 @@ def create_optional_keyboard(UserID: int):
 
     return optional_keyboard
 
+# Функция для команду /start- выводит basic_keyboard и ознакомительный текст, о принципах работы бота.
+@bot.message_handler(commands=['start'])
+def start_bot(message):
+    # Глобальная mssg, в которой находится cообщения, которые необходимо удалить при ошибке написания текста.
+    global mssg
+
+    # Глобальная UserDict - для сохранения id пользователя в качестве ключа и название папки и ее содержимого в качестве значения.
+    global UserDict
+
+    # Глобальная user_id - для хранения id пользователя.
+    global user_id
+
+    # Сохранение текущего id пользователя.
+    user_id = message.from_user.id
+
+    # Cоздание UserDict определенного id пользователя.
+    UserDict[user_id] = dict()
+
+    # Вывод клавиатуры после нажатия ввода /start.
+    basic_keyboard = create_basic_keyboard(message.from_user.id)
+
+    # Вывод ознакомительного текста и basic_keyboard.
+    mssg = bot.send_message(message.chat.id, f'{message.from_user.username}, я бот-организатор заметок.'
+                                             f' Чтобы создать заметку нажмите на кнопку "создать папку" и введите название папки,'
+                                             f' а затем нажмите на кнопку созданной папки и введите необходимую заметку.',
+                            reply_markup=basic_keyboard)
+
+
+# Функция, работающая при нажатии команды contacts- и вывод текста с ссылкой для связи.
+@bot.message_handler(commands=['contacts'])
+def help_bot(message):
+    # Глобальная mssg, в которой находится cообщения, которые необходимо удалить при ошибке написания текста.
+    global mssg
+
+    # Вывод клавиатуры после нажатия ввода /contacts.
+    basic_keyboard = create_basic_keyboard(message.from_user.id)
+
+    # Вывод текста и  basic_keyboard с ссылкой для связи.
+    mssg = bot.send_message(message.chat.id, "По всем вопросам обращаться https://t.me/sleep_fox789",
+                            reply_markup=basic_keyboard)
+
 
