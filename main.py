@@ -89,7 +89,6 @@ def create_optional_keyboard(UserID: int):
 
         optional_keyboard.add(name_folder)
 
-        # Вывод клавиатуры.
     return optional_keyboard
 
 
