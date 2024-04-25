@@ -138,7 +138,7 @@ def help_bot(message):
     basic_keyboard = create_basic_keyboard(message.from_user.id)
 
     # Вывод текста и  basic_keyboard с ссылкой для связи.
-    mssg = bot.send_message(message.chat.id, "По всем вопросам обращаться https://t.me/LoL CaKe",
+    mssg = bot.send_message(message.chat.id, "По всем вопросам обращаться https://t.me/LoLCaKe",
                             reply_markup=basic_keyboard)
 
 
@@ -191,7 +191,7 @@ def call_back(call):
                 msg = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                             reply_markup=additional_keyboard,
                                             text="Введите название заметки, которую хотите переместить и папку,откуда переместить"
-                                                 "и куда хотите переметить (пример: хлеб/фильмы/покупки): ")
+                                                 "и куда хотите перемеcтить (пример: хлеб/фильмы/покупки): ")
 
                 # Меняем значение choice_handler на 3, для правильной обработки текста.
                 choice_handler = 3
