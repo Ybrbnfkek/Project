@@ -141,11 +141,6 @@ def help_bot(message):
                             reply_markup=basic_keyboard)
 
 
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, 'Hello! Welcome to my bot.')
-
-
 # handles the /help command
 @bot.message_handler(commands=['help'])
 def send_help(message):
