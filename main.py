@@ -1,7 +1,6 @@
 from dublib.Methods import CheckPythonMinimalVersion, ReadJSON
 from telebot import types
 
-import sqlite3
 import json
 import os
 import telebot
@@ -125,7 +124,7 @@ def start_bot(message):
     # Вывод ознакомительного текста и basic_keyboard.
     mssg = bot.send_message(message.chat.id, f'{message.from_user.username}, я бот-организатор заметок.'
                                              f' Чтобы создать заметку нажмите на кнопку "создать папку", введите название папки,'
-                                             f' а затем нажмите на кнопку созданной папки и введите необходимую заметку.',
+                                             f' а затем нажмите на кнопку созданной папки и введите необходимую заметку. Если нужно удалить папку или заметку нажмите на соотвествующие кнопки.\nЧтобы узнать команды бота используйте /help',
                             reply_markup=basic_keyboard)
 
 # Функция, работающая при нажатии команды contacts- и вывод текста с ссылкой для связи.
@@ -138,8 +137,24 @@ def help_bot(message):
     basic_keyboard = create_basic_keyboard(message.from_user.id)
 
     # Вывод текста и  basic_keyboard с ссылкой для связи.
-    mssg = bot.send_message(message.chat.id, "По всем вопросам обращаться https://t.me/LoL CaKe",
+    mssg = bot.send_message(message.chat.id, "По всем вопросам обращаться https://t.me/LoLCaKe",
                             reply_markup=basic_keyboard)
+
+
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(message, 'Hello! Welcome to my bot.')
+
+
+# handles the /help command
+@bot.message_handler(commands=['help'])
+def send_help(message):
+    bot.reply_to(message,
+                 f'/start - начать взаимодействие с ботом.\n/contacts - для связи с автором.\nостальное тыкать на кнопочки')
+
+
+# starts the bot
+bot.polling()
 
 
 # Обработка call - запросы, при нажатии кнопки пользователем.
